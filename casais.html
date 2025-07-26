@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Formulário de Duplas</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #111; color: #eee; padding: 20px; }
+    .dupla { border: 1px solid #444; padding: 10px; margin-bottom: 20px; background: #222; border-radius: 8px; }
+    .champ { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+    .champ img { width: 60px; border-radius: 6px; }
+    select, input { background: #333; color: #eee; border: 1px solid #555; padding: 4px; border-radius: 4px; }
+    label { display: block; font-size: 0.9em; margin-top: 5px; }
+    .campos { display: flex; flex-wrap: wrap; gap: 10px; }
+  </style>
+</head>
+<body>
+  <h1>Cadastro de Duplas de Campeões</h1>
+  <form id="duplasForm"></form>
+
+  <script>
+    const duplas = [
+      ["Xayah", "Rakan"], ["Ashe", "Tryndamere"], ["Caitlyn", "Vi"], ["Senna", "Lucian"],
+      ["Aphelios", "Sett"], ["Jinx", "Ekko"], ["Garen", "Katarina"], ["Lux", "Sylas"],
+      ["Diana", "Leona"], ["Jarvan IV", "Shyvana"], ["Yunara", "Xin Zhao"],
+      ["Mel", "Jayce"], ["Gangplank", "Illaoi"], ["Kalista", "Hecarim"],
+      ["Yone", "Lillia"], ["Yasuo", "Ahri"], ["Twisted Fate", "Graves"],
+      ["Nidalee", "Neeko"], ["Akali", "Kayn"], ["Tristana", "Rumble"],
+      ["Ezreal", "Zoe"], ["Kai'Sa", "Taliyah"]
+    ];
+
+    const spellOptions = ["Flash", "Curar", "Ghost", "Smite", "Barreira", "Exaust", "TP", "Ignite", "Cleanse"];
+    const runasPrimarias = ["PTA", "CONQUISTADOR", "LETHAL TEMPO", "PÉZINHO", "ELETROCUTAR", "COLHEITA", "CHUVA DE LAMINAS", "AERY", "COMETA", "IMPETO", "GRASP", "POS SHOCK", "GARDIÃO", "GELINHO", "LIVRO DE FEITIÇOS", "FIRST STRIKE"];
+    const runasSecundarias = ["Inspiração", "Dominação", "Feitiçaria", "Precisão", "Determinação"];
+    const resultados = ["VITORIA", "DERROTA"];
+
+    const ddragonURL = champ => `https://ddragon.leagueoflegends.com/cdn/14.14.1/img/champion/${champ.replace(/\s|'/g, '')}.png`;
+
+    const createSelect = (name, options) => {
+      const sel = document.createElement("select");
+      sel.name = name;
+      for (const opt of options) {
+        const o = document.createElement("option");
+        o.value = o.textContent = opt;
+        sel.appendChild(o);
+      }
+      return sel;
+    };
+
+    const createInput = (name, type = "text") => {
+      const input = document.createElement("input");
+      input.name = name;
+      input.type = type;
+      return input;
+    };
+
+    const form = document.getElementById("duplasForm");
+
+    duplas.forEach(([adc, sup], i) => {
+      const duplaDiv = document.createElement("div");
+      duplaDiv.className = "dupla";
+
+      const champs = [adc, sup];
+      champs.forEach((champ, idx) => {
+        const champDiv = document.createElement("div");
+        champDiv.className = "champ";
+
+        const img = document.createElement("img");
+        img.src = ddragonURL(champ);
+        img.alt = champ;
+
+        const campos = document.createElement("div");
+        campos.className = "campos";
+
+        campos.innerHTML = `
+          <label>Lane: <input name="lane_${i}_${idx}" value="${idx === 0 ? 'ADC' : 'SUP'}"></label>
+          <label>KDA: <input name="kda_${i}_${idx}" type="text"></label>
+          <label>Spell 1:</label>
+        `;
+        campos.appendChild(createSelect(`spell1_${i}_${idx}`, spellOptions));
+        campos.innerHTML += `<label>Spell 2:</label>`;
+        campos.appendChild(createSelect(`spell2_${i}_${idx}`, spellOptions));
+        campos.innerHTML += `<label>Runa 1:</label>`;
+        campos.appendChild(createSelect(`runa1_${i}_${idx}`, runasPrimarias));
+        campos.innerHTML += `<label>Runa 2:</label>`;
+        campos.appendChild(createSelect(`runa2_${i}_${idx}`, runasSecundarias));
+        campos.innerHTML += `
+          <label>CS: <input name="cs_${i}_${idx}" type="number"></label>
+          <label>KP(%): <input name="kp_${i}_${idx}" type="number"></label>
+          <label>LVL: <input name="lvl_${i}_${idx}" type="number"></label>
+        `;
+
+        champDiv.appendChild(img);
+        champDiv.appendChild(campos);
+        duplaDiv.appendChild(champDiv);
+      });
+
+      // Campos da dupla
+      duplaDiv.innerHTML += `
+        <label>Tempo de Jogo: <input name="tempo_${i}" type="text"></label>
+        <label>Resultado:</label>
+      `;
+      duplaDiv.appendChild(createSelect(`resultado_${i}`, resultados));
+
+      form.appendChild(duplaDiv);
+    });
+
+    // Salvamento no JSON local
+    const saveButton = document.createElement("button");
+    saveButton.textContent = "Salvar Dados";
+    saveButton.type = "button";
+    saveButton.onclick = () => {
+      const formData = new FormData(form);
+      const obj = {};
+      formData.forEach((val, key) => obj[key] = val);
+      localStorage.setItem("duplasData", JSON.stringify(obj));
+      alert("Dados salvos!");
+    };
+
+    // Carregar dados do JSON local
+    window.addEventListener("load", () => {
+      const dados = JSON.parse(localStorage.getItem("duplasData") || "null");
+      if (dados) {
+        for (const key in dados) {
+          const el = form.querySelector(`[name='${key}']`);
+          if (el) el.value = dados[key];
+        }
+      }
+    });
+
+    form.appendChild(saveButton);
+  </script>
+</body>
+</html>
